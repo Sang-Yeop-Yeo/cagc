@@ -1,0 +1,13 @@
+load_ckpt_teacher: /disk1/sosick377/content-aware-gan-compression/Model/full_size_model/256px_full_size.pt
+load_ckpt_student:
+save_ckpt:
+
+z_dim: 512
+c_dim: 0
+
+kd_method: ca # ca: content aware knowledge distillation
+
+### content aware pruning
+n_sample: 20 # number of samples for estimation, default = 400
+batch_size: 10 # size of the batch for estimation, default = 10
+noise_prob: 0.05 # default = 0.05
