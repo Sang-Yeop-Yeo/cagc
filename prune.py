@@ -11,7 +11,7 @@ def main():
     print(parser_args)
     print("\n\nBeginning of process.")
     print_time()
-    set_seed(parser_args.seed)
+    set_random_seed(parser_args.random_seed)
     
     device = torch.device('cuda', parser_args.rank)
     #### model_dict_load

@@ -13,8 +13,9 @@ mirror: False
 
 cfg: paper256 # auto, stylegan2, paper256, paper512, paper1024, cifar
 metrics: ["fid50k_full"]
-seed: 0
-
+random_seed: 0
+aug: # None (ada), noaug, fixed
+p: # Specify p for "fixed" (required): <float>
 
 z_dim: 512
 w_dim: 512

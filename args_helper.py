@@ -24,7 +24,7 @@ class ArgsHelper:
             help = "Override the default choice for a CUDA-enabled GPU by specifying the GPU\"s integer index (i.e. \"0\" for \"cuda:0\")"
         )
         parser.add_argument(
-            "--seed",
+            "--random_seed",
             type = int,
             default = 0,
             metavar = "S",
