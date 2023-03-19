@@ -9,27 +9,27 @@ import json
 
 
 #num_gpus
-def subprocess_fn(args, temp_dir):
-    dnnlib.util.Logger(file_name=os.path.join(args.save_ckpt, "log.txt"), file_mode = "a", should_flush = True)
+def subprocess_fn(rank, args, temp_dir):
+    dnnlib.util.Logger(file_name=os.path.join(args.run_dir, "log.txt"), file_mode = "a", should_flush = True)
 
     if args.num_gpus > 1:
         init_file = os.path.abspath(os.path.join(temp_dir, ".torch_distributed_init"))
         if os.name == "nt":
             init_method = "file:///" + init_file.replace("\\", "/")
-            torch.distributed.init_process_group(backend = "gloo", init_method = init_method, rank = args.rank, world_size = args.num_gpus)
+            torch.distributed.init_process_group(backend = "gloo", init_method = init_method, rank = rank, world_size = args.num_gpus)
         else:
             init_method = f"file://{init_file}"
-            torch.distributed.init_process_group(backend = "nccl", init_method = init_method, rank = args.rank, world_size = args.num_gpus)
+            torch.distributed.init_process_group(backend = "nccl", init_method = init_method, rank = rank, world_size = args.num_gpus)
 
-    sync_device = torch.device("cuda", args.rank) if args.num_gpus > 1 else None
-    training_stats.init_multiprocessing(rank = args.rank, sync_device = sync_device)
-    if args.rank != 0:
+    sync_device = torch.device("cuda", rank) if args.num_gpus > 1 else None
+    training_stats.init_multiprocessing(rank = rank, sync_device = sync_device)
+    if rank != 0:
         custom_ops.verbosity = "none"
 
     training_loop.training_loop(args)
 
 
-def main(ctx, outdir, dry_run):
+def main():
     #log = set_logger(parser_args) #logger 저장위치 바꾸기, 시간 반영하기
     #log.info("parser_args: {}".format(parser_args))
     dnnlib.util.Logger(should_flush=True) # setting 어떻게?
@@ -39,11 +39,11 @@ def main(ctx, outdir, dry_run):
 
     run_desc = setup_training_loop_kwargs(parser_args)
 
-    parser_args.run_dir = parser_args.ckpt + "_" + time.strftime("%m/%d_%H:%M:%S", time.localtime())
+    parser_args.run_dir = parser_args.save_ckpt + "_" + time.strftime("%m-%d_%H:%M:%S", time.localtime())
 
     print()
     print('Training options:')
-    print(json.dumps(parser_args, indent=2))
+    print(json.dumps(vars(parser_args), indent=2))
     print()
     print(f'Output directory:   {parser_args.run_dir}')
     print(f'Training data:      {parser_args.training_set_kwargs.path}')
@@ -59,7 +59,7 @@ def main(ctx, outdir, dry_run):
     print('Creating output directory...')
     os.makedirs(parser_args.run_dir)
     with open(os.path.join(parser_args.run_dir, 'training_options.json'), 'wt') as f:
-        json.dump(parser_args, f, indent=2)
+        json.dump(vars(parser_args), f, indent=2)
 
 
     print('Launching processes...')

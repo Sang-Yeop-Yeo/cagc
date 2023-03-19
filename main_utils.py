@@ -28,7 +28,7 @@ def setup_training_loop_kwargs(args):
               "fp32", "nhwc", "allow_tf32", "nobench", "workers",  # performance options
               "G_reg_interval", "D_reg_interval", # Regularization
               "ada_interval", "ada_kimg",
-              "kimg_per_tick", "resume_pkl", "abort_fn", "progress_fn", "augment_kwargs"
+              "kimg_per_tick", "resume_pkl", "abort_fn", "progress_fn", "augment_kwargs", "pruning_ratio", "cudnn_benchmark",
               "kd_method"] # compression
     
     for kwarg in kwargs:
@@ -46,6 +46,10 @@ def setup_training_loop_kwargs(args):
         args.ada_kimg = 500
     if args.kimg_per_tick is None:
         args.kimg_per_tick = 4
+    if args.pruning_ratio is None:
+        args.pruning_ratio = 1.0
+    if args.cudnn_benchmark is None:
+        args.cudnn_benchmark = True
     
 
 
@@ -111,14 +115,14 @@ def setup_training_loop_kwargs(args):
             args.training_set_kwargs.max_size = args.subset
             args.training_set_kwargs.random_seed = args.random_seed
 
-    if "mirror" is None:
+    if args.mirror is None:
         args.mirror = False
     assert isinstance(args.mirror, bool)
     if args.mirror:
         desc += "-mirror"
         args.training_set_kwargs.xflip = True
 
-    if "cfg" is None:
+    if args.cfg is None:
         args.cfg = "auto"
     assert isinstance(args.cfg, str)
     desc += f"-{args.cfg}"

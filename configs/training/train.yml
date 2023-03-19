@@ -1,14 +1,14 @@
 load_ckpt_teacher: 
 load_ckpt_student:
-save_ckpt:
+save_ckpt: /disk1/sosick377/CAGC/results/training
 data: /disk1/sosick377/datasets/ffhq256x256.zip
 subset: # None: all
 # 학습 이어서 하는거 추가
 
-cond: False
+cond: 
 num_gpus: 2 # number of GPUs
-snap: 50 # snapshot interval
-mirror: False
+snap:  # snapshot interval
+mirror: 
 
 
 cfg: paper256 # auto, stylegan2, paper256, paper512, paper1024, cifar
@@ -24,10 +24,5 @@ c_dim: 0
 
 
 
-kd_method: ca # None: training, ca: content aware knowledge distillation
+kd_method: # None: training, ca: content aware knowledge distillation
 pruning_ratio: 1.0 # None: 1.0
-
-### content aware pruning
-n_sample: 20 # number of samples for estimation, default = 400
-batch_size: 10 # size of the batch for estimation, default = 10
-noise_prob: 0.05 # default = 0.05
