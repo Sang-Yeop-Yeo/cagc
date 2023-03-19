@@ -16,7 +16,6 @@ class ArgsHelper:
             "--config",
             help="Config file to use"
         )
-
         parser.add_argument(
             "--rank",
             type = int,

@@ -1,9 +1,27 @@
 load_ckpt_teacher: /disk1/sosick377/content-aware-gan-compression/Model/full_size_model/256px_full_size.pt
 load_ckpt_student:
 save_ckpt:
+data: /disk1/sosick377/datasets/ffhq256x256.zip
+subset: # None: all
+# 학습 이어서 하는거 추가
+
+cond: False
+num_gpus: 2 # number of GPUs
+snap: 50 # snapshot interval
+mirror: False
+
+
+cfg: paper256 # auto, stylegan2, paper256, paper512, paper1024, cifar
+metrics: ["fid50k_full"]
+seed: 0
+
 
 z_dim: 512
+w_dim: 512
 c_dim: 0
+
+
+
 
 kd_method: ca # ca: content aware knowledge distillation
 
