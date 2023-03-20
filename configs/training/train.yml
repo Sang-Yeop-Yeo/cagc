@@ -3,7 +3,7 @@ load_ckpt_student:
 save_ckpt: /disk1/sosick377/CAGC/results/training
 data: /disk1/sosick377/datasets/ffhq256x256.zip
 subset: # None: all
-# 학습 이어서 하는거 추가
+resume: # 추가하기
 
 cond: 
 num_gpus: 2 # number of GPUs

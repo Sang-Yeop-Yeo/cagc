@@ -26,7 +26,7 @@ def subprocess_fn(rank, args, temp_dir):
     if rank != 0:
         custom_ops.verbosity = "none"
 
-    training_loop.training_loop(args)
+    training_loop.training_loop(rank, args)
 
 
 def main():

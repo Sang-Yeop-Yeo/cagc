@@ -16,13 +16,13 @@ class ArgsHelper:
             "--config",
             help="Config file to use"
         )
-        parser.add_argument(
-            "--rank",
-            type = int,
-            default = 0,
-            metavar = "G",
-            help = "Override the default choice for a CUDA-enabled GPU by specifying the GPU\"s integer index (i.e. \"0\" for \"cuda:0\")"
-        )
+        # parser.add_argument(
+        #     "--rank",
+        #     type = int,
+        #     default = 0,
+        #     metavar = "G",
+        #     help = "Override the default choice for a CUDA-enabled GPU by specifying the GPU\"s integer index (i.e. \"0\" for \"cuda:0\")"
+        # )
         parser.add_argument(
             "--random_seed",
             type = int,

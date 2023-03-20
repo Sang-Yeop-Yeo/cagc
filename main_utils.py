@@ -160,7 +160,7 @@ def setup_training_loop_kwargs(args):
     
     args.G_opt_kwargs = dnnlib.EasyDict(class_name='torch.optim.Adam', lr=spec.lrate, betas=[0,0.99], eps=1e-8) # SWAD 할 수 있으면 좋겠음
     args.D_opt_kwargs = dnnlib.EasyDict(class_name='torch.optim.Adam', lr=spec.lrate, betas=[0,0.99], eps=1e-8) # SWAD 할 수 있으면 좋겠음
-    args.loss_kwargs = dnnlib.EasyDict(class_name='training.loss.StyleGAN2Loss', kd = args.kd_method, r1_gamma=spec.gamma) # KD 삽입하기
+    args.loss_kwargs = dnnlib.EasyDict(class_name='training.loss.StyleGAN2Loss', kd_method = args.kd_method, r1_gamma=spec.gamma) # KD 삽입하기
 
     args.total_kimg = spec.kimg
     args.batch_size = spec.mb
