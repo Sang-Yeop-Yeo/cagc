@@ -25,4 +25,4 @@ c_dim: 0
 
 
 kd_method: # None: training, ca: content aware knowledge distillation
-pruning_ratio: 1.0 # None: 1.0
+pruning_ratio: 0.0 # None: 1.0
