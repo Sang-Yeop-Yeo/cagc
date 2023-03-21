@@ -6,6 +6,7 @@ from torch_utils import training_stats
 from torch_utils import custom_ops
 from training import training_loop
 import json
+import shutil
 
 
 #num_gpus
@@ -77,4 +78,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        if os.path.exists("/root/.cache/torch_extensions"):
+            shutil.rmtree("/root/.cache/torch_extensions")

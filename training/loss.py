@@ -26,7 +26,8 @@ def batch_img_parsing(img_tensor, parsing_net, device):
     transformed_tensor = F.interpolate(transformed_tensor, 
                                        scale_factor=scale_factor, 
                                        mode='bilinear', 
-                                       align_corners=False) # Scale to 512
+                                       align_corners=False,
+                                       recompute_scale_factor=True) # Scale to 512
     for i in range(transformed_tensor.shape[1]):
         transformed_tensor[:,i,...] = (transformed_tensor[:,i,...] - CHANNEL_MEAN[i]) / CHANNEL_STD[i]
         
@@ -55,7 +56,7 @@ def get_masked_tensor(img_tensor, batch_parsing, device, mask_grad=False):
     mask_float = mask.unsqueeze(0).type(torch.FloatTensor) # Make it to a 4D tensor with float for interpolation
     scale_factor = img_tensor.shape[-1] / PARSING_SIZE
     
-    resized_mask = F.interpolate(mask_float, scale_factor=scale_factor, mode='bilinear', align_corners=False)
+    resized_mask = F.interpolate(mask_float, scale_factor=scale_factor, mode='bilinear', align_corners=False, recompute_scale_factor=True)
     resized_mask = (resized_mask.squeeze() > 0.5).type(torch.FloatTensor).to(device)
     
     if mask_grad:
@@ -102,7 +103,7 @@ class StyleGAN2Loss(Loss):
         self.pl_decay = pl_decay
         self.pl_weight = pl_weight
         self.pl_mean = torch.zeros([], device=device)
-        self.parsing_net = get_parsing_net(device)
+        self.parsing_net, _ = get_parsing_net(device)
 
     def run_G(self, z, c, sync):
         with misc.ddp_sync(self.G_mapping, sync):
@@ -152,7 +153,7 @@ class StyleGAN2Loss(Loss):
                 training_stats.report('Loss/signs/fake', gen_logits.sign())
                 loss_Gmain = torch.nn.functional.softplus(-gen_logits) # -log(sigmoid(gen_logits))
                 training_stats.report('Loss/G/loss', loss_Gmain)
-                loss_Gmain.mean().mul(gain)
+                
                 if self.kd_method is not None:
                     gen_teacher_img_parsing = batch_img_parsing(gen_teacher_img, self.parsing_net, self.device)
                     gen_teacher_img_mask = get_masked_tensor(gen_teacher_img, gen_teacher_img_parsing, self.device, mask_grad = False)
@@ -160,10 +161,10 @@ class StyleGAN2Loss(Loss):
                     gen_teacher_img_mask.requires_grad = True
                     #### 아래 부분 output / inter 추가하기
                     kd_l1_loss = self.kd_l1_lambda * torch.mean(torch.abs(gen_teacher_img_mask - gen_img_mask))
-                    loss_Gmain = loss_Gmain + kd_l1_loss
+                    loss_Gmain = loss_Gmain + kd_l1_loss.div(gain)
 
             with torch.autograd.profiler.record_function('Gmain_backward'):
-                loss_Gmain.backward()
+                loss_Gmain.mean().mul(gain).backward()
 
         # Gpl: Apply path length regularization.
         if do_Gpl:
@@ -187,7 +188,7 @@ class StyleGAN2Loss(Loss):
         loss_Dgen = 0
         if do_Dmain:
             with torch.autograd.profiler.record_function('Dgen_forward'):
-                gen_img, _gen_ws = self.run_G(gen_z, gen_c, sync=False)
+                gen_img, gen_ws, gen_teacher_img, gen_teacher_ws = self.run_G(gen_z, gen_c, sync=False)
                 gen_logits = self.run_D(gen_img, gen_c, sync=False) # Gets synced by loss_Dreal.
                 training_stats.report("Scores/fake_med", gen_logits.median())
                 training_stats.report('Loss/scores/fake', gen_logits)

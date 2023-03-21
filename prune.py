@@ -9,6 +9,7 @@ import copy
 import legacy
 import os
 from torch_utils import misc
+import shutil
 
 
 
@@ -72,4 +73,8 @@ def main():
     print('Exiting...')
 
 if __name__== "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        if os.path.exists("/root/.cache/torch_extensions"):
+            shutil.rmtree("/root/.cache/torch_extensions")
