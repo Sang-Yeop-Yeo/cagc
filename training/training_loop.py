@@ -106,9 +106,26 @@ def training_loop(rank, args):
     D = dnnlib.util.construct_class_by_name(**args.D_kwargs, **common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
     G_ema = copy.deepcopy(G).eval()
     if args.kd_method is not None:
-        G_teacher = dnnlib.util.construct_class_by_name(**args.G_kwargs, **common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
-        D_teacher = dnnlib.util.construct_class_by_name(**args.D_kwargs, **common_kwargs).train().requires_grad_(False).to(device) # subclass of torch.nn.Module
+        G_teacher = dnnlib.util.construct_class_by_name(**args.G_kwargs, **common_kwargs).eval().requires_grad_(False).to(device) # subclass of torch.nn.Module
+        D_teacher = dnnlib.util.construct_class_by_name(**args.D_kwargs, **common_kwargs).eval().requires_grad_(False).to(device) # subclass of torch.nn.Module
         G_teacher_ema = copy.deepcopy(G_teacher).eval()
+        if rank == 0:
+            print(f'student loading from "{args.load_ckpt_student}"')
+            with dnnlib.util.open_url(args.load_ckpt_student) as f:
+                resume_data = legacy.load_network_pkl(f)
+            for name, module in [('G', G), ('D', D), ('G_ema', G_ema)]:
+                if module is not None:
+                    misc.copy_params_and_buffers(resume_data[name], module, require_all=False) # load하는 부분 체크
+
+            print(f'teacher loading from "{args.load_ckpt_teacher}"')
+            with dnnlib.util.open_url(args.load_ckpt_teacher) as f:
+                resume_data = legacy.load_network_pkl(f)
+            for name, module in [('G', G_teacher), ('D', D_teacher), ('G_ema', G_teacher_ema)]:
+                if module is not None:
+                    misc.copy_params_and_buffers(resume_data[name], module, require_all=False) # load하는 부분 체크
+            ######### training 과정 데이터 남아있는지 확인하고 있으면 삭제, teacher network eval, requires_grad false로 바꾸기
+            
+
 
     if (args.resume_pkl is not None) and (rank == 0):
         print(f'Resuming from "{args.resume_pkl}"')

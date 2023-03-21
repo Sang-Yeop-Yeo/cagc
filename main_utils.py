@@ -29,7 +29,7 @@ def setup_training_loop_kwargs(args):
               "G_reg_interval", "D_reg_interval", # Regularization
               "ada_interval", "ada_kimg",
               "kimg_per_tick", "resume_pkl", "abort_fn", "progress_fn", "augment_kwargs", "pruning_ratio", "cudnn_benchmark",
-              "kd_method"] # compression
+              "kd_method", "kd_l1_lambda", "kd_lpips_lambda", "kd_mode"] # compression
     
     for kwarg in kwargs:
         if kwarg not in args:
@@ -47,13 +47,18 @@ def setup_training_loop_kwargs(args):
     if args.kimg_per_tick is None:
         args.kimg_per_tick = 4
     if args.pruning_ratio is None:
-        args.pruning_ratio = 1.0
+        args.pruning_ratio = 0.0
     if args.cudnn_benchmark is None:
         args.cudnn_benchmark = True
     
-
-
-    #########
+    #### ca ########## 
+    if args.kd_l1_lambda is None:
+        args.kd_l1_lambda = 3
+    if args.kd_lpips_lambda is None:
+        args.kd_lpips_lambda = 3
+    if args.kd_mode is None:
+        args.kd_mode = "output_only"
+    ############
 
     if args.num_gpus is None:
         args.num_gpus = 1
@@ -161,6 +166,12 @@ def setup_training_loop_kwargs(args):
     args.G_opt_kwargs = dnnlib.EasyDict(class_name='torch.optim.Adam', lr=spec.lrate, betas=[0,0.99], eps=1e-8) # SWAD 할 수 있으면 좋겠음
     args.D_opt_kwargs = dnnlib.EasyDict(class_name='torch.optim.Adam', lr=spec.lrate, betas=[0,0.99], eps=1e-8) # SWAD 할 수 있으면 좋겠음
     args.loss_kwargs = dnnlib.EasyDict(class_name='training.loss.StyleGAN2Loss', kd_method = args.kd_method, r1_gamma=spec.gamma) # KD 삽입하기
+    
+    ######################
+    args.loss_kwargs.kd_l1_lambda = 3
+    args.loss_kwargs.kd_lpips_lambda = 3
+    args.loss_kwargs.kd_mode = "output_only"
+    ######################
 
     args.total_kimg = spec.kimg
     args.batch_size = spec.mb

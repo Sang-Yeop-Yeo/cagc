@@ -1,6 +1,6 @@
 load_ckpt_teacher: 
 load_ckpt_student:
-save_ckpt: /disk1/sosick377/CAGC/results/training
+save_ckpt: /disk1/sosick377/cagc/results/training
 data: /disk1/sosick377/datasets/ffhq256x256.zip
 subset: # None: all
 resume: # 추가하기

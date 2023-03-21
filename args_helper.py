@@ -30,6 +30,13 @@ class ArgsHelper:
             metavar = "S",
             help = "Random seed (default: 0, benchmark = True, deterministic = False)"
         )
+        parser.add_argument(
+            "--w_dim",
+            type = int,
+            default = 512,
+            metavar = "S",
+            help = "Random seed (default: 0, benchmark = True, deterministic = False)"
+        )
 
 
         args = parser.parse_args()

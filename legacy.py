@@ -35,12 +35,9 @@ def load_network_pkl(f, force_fp16=False):
         data['augment_pipe'] = None
 
     # Validate contents.
-    assert isinstance(data['g_dense'], torch.nn.Module)
-    assert isinstance(data['d_dense'], torch.nn.Module)
-    assert isinstance(data['g_dense_ema'], torch.nn.Module)
-    assert isinstance(data['g_pruned'], torch.nn.Module)
-    assert isinstance(data['d_pruned'], torch.nn.Module)
-    assert isinstance(data['g_pruned_ema'], torch.nn.Module)
+    assert isinstance(data['G'], torch.nn.Module)
+    assert isinstance(data['D'], torch.nn.Module)
+    assert isinstance(data['G_ema'], torch.nn.Module)
     assert isinstance(data['training_set_kwargs'], (dict, type(None)))
     assert isinstance(data['augment_pipe'], (torch.nn.Module, type(None)))
 

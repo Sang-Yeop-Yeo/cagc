@@ -1,9 +1,9 @@
-load_ckpt_teacher: 
-load_ckpt_student:
-save_ckpt:
+load_ckpt_teacher: /disk1/sosick377/cagc/results/training_03-20_08:40:02/network-snapshot-004233.pkl
+load_ckpt_student: /disk1/sosick377/cagc_ckpt/pruned/0.7/pruned_network-0.7.pkl
+save_ckpt: /disk1/sosick377/cagc_ckpt/training/ca0.7
 data: /disk1/sosick377/datasets/ffhq256x256.zip
 subset: # None: all
-# 학습 이어서 하는거 추가
+resume: # 추가하기
 
 cond: False
 num_gpus: 2 # number of GPUs
@@ -25,9 +25,9 @@ c_dim: 0
 
 
 kd_method: ca # None: training, ca: content aware knowledge distillation
-pruning_ratio: 1.0 # None: 1.0
+pruning_ratio: 0.7 # None: 0.0(dense)
 
 ### content aware pruning
-n_sample: 20 # number of samples for estimation, default = 400
+n_sample: 400 # number of samples for estimation, default = 400
 batch_size: 10 # size of the batch for estimation, default = 10
 noise_prob: 0.05 # default = 0.05
