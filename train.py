@@ -28,7 +28,6 @@ def subprocess_fn(rank, args, temp_dir):
 
     training_loop.training_loop(rank, args)
 
-
 def main():
     #log = set_logger(parser_args) #logger 저장위치 바꾸기, 시간 반영하기
     #log.info("parser_args: {}".format(parser_args))
