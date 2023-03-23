@@ -125,9 +125,10 @@ class StyleGAN2Loss(Loss):
                         ws_teacher[:, cutoff_teacher:] = self.G_teacher_mapping(torch.randn_like(z), c, skip_w_avg_update=True)[:, cutoff_teacher:]
             with misc.ddp_sync(self.G_teacher_synthesis, sync):
                 img_teacher = self.G_teacher_synthesis(ws_teacher)
+            return img, ws, img_teacher, ws_teacher
 
 
-        return img, ws, img_teacher, ws_teacher
+        return img, ws, None, None
 
     def run_D(self, img, c, sync):
         if self.augment_pipe is not None:

@@ -66,7 +66,8 @@ def main():
     torch.multiprocessing.set_start_method("spawn")
     with tempfile.TemporaryDirectory() as temp_dir:
         if parser_args.num_gpus == 1:
-            subprocess_fn(args = parser_args,
+            subprocess_fn(rank=0,
+                          args = parser_args,
                           temp_dir = temp_dir)
         else:
             torch.multiprocessing.spawn(fn = subprocess_fn,
