@@ -1,0 +1,28 @@
+load_ckpt_teacher: 
+load_ckpt_student:
+save_ckpt: /workspace/cacg/results/training
+data: /workspace/cacg/dataset/ffhq256x256.zip
+subset: # None: all
+resume: # 추가하기
+
+cond: 
+num_gpus: 1 # number of GPUs
+snap:  # snapshot interval
+mirror: 
+
+
+cfg: paper256 # auto, stylegan2, paper256, paper512, paper1024, cifar
+metrics: ["fid50k_full"]
+random_seed: 0
+aug: noaug # None (ada), noaug, fixed
+p: # Specify p for "fixed" (required): <float>
+
+z_dim: 512
+w_dim: 512
+c_dim: 0
+
+
+
+
+kd_method: # None: training, ca: content aware knowledge distillation
+pruning_ratio: 0.0 # None: 1.0
