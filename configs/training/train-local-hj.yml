@@ -4,6 +4,7 @@ save_ckpt: /workspace/cacg/results/training
 data: /workspace/cacg/dataset/ffhq256x256.zip
 subset: # None: all
 resume: # 추가하기
+model_scan: 1
 
 cond: 
 num_gpus: 1 # number of GPUs

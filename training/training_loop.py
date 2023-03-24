@@ -5,9 +5,11 @@ import time
 import dnnlib
 import os
 from utils.utils import set_random_seed
+from utils.tensorboard_util import weight_histograms_generator, weight_histograms_discriminator
 from torch_utils import misc, training_stats
 from torch_utils.ops import conv2d_gradfix
 from torch_utils.ops import grid_sample_gradfix
+from training.networks import Generator, Discriminator
 import psutil
 import json
 import pickle
@@ -85,6 +87,12 @@ def training_loop(rank, args):
     torch.backends.cudnn.allow_tf32 = args.allow_tf32
     conv2d_gradfix.enabled = True
     grid_sample_gradfix.enabled = True
+    
+    # Flag for tensorboard visualization of model weights
+    if hasattr(args, "model_scan") and args.model_scan is not None and args.model_scan==1:
+        model_scan = True
+    else:
+        model_scan = False
 
     # Load training set.
     if rank == 0:
@@ -125,8 +133,6 @@ def training_loop(rank, args):
                     misc.copy_params_and_buffers(resume_data[name], module, require_all=False) # load하는 부분 체크
             ######### training 과정 데이터 남아있는지 확인하고 있으면 삭제, teacher network eval, requires_grad false로 바꾸기
             
-
-
     if (args.resume_pkl is not None) and (rank == 0):
         print(f'Resuming from "{args.resume_pkl}"')
         with dnnlib.util.open_url(args.resume_pkl) as f:
@@ -188,8 +194,8 @@ def training_loop(rank, args):
         phase.end_event = None
         if rank == 0:
             phase.start_event = torch.cuda.Event(enable_timing=True)
-            phase.end_event = torch.cuda.Event(enable_timing=True)
-
+            phase.end_event = torch.cuda.Event(enable_timing=True)       
+            
     # Export sample images.
     grid_size = None
     grid_z = None
@@ -217,7 +223,15 @@ def training_loop(rank, args):
             stats_tfevents = tensorboard.SummaryWriter(args.run_dir)
         except ImportError as err:
             print('Skipping tfevents export:', err)
+            
+    if model_scan and stats_tfevents is not None:
+        for name, module in [('G', G), ('D', D), ('G_ema', G_ema)]:
+            if isinstance(module, Generator):
+                        weight_histograms_generator(stats_tfevents, 0, module, name, 0)
+            if isinstance(module, Discriminator):
+                weight_histograms_discriminator(stats_tfevents, 0, module, name, 0)
     
+        stats_tfevents.flush()
     # Train.
     if rank == 0:
         print(f'Training for {args.total_kimg} kimg...')
@@ -245,6 +259,7 @@ def training_loop(rank, args):
 
         # Execute training phases.
         for phase, phase_gen_z, phase_gen_c in zip(phases, all_gen_z, all_gen_c):
+                   
             if batch_idx % phase.interval != 0:
                 continue
 
@@ -330,18 +345,26 @@ def training_loop(rank, args):
         snapshot_pkl = None
         snapshot_data = None
         if (args.network_snapshot_ticks is not None) and (done or cur_tick % args.network_snapshot_ticks == 0):
-            snapshot_data = dict(training_set_kwargs=dict(args.training_set_kwargs))
+            snapshot_data = dict(training_set_kwargs=dict(args.training_set_kwargs))        
+            
             for name, module in [('G', G), ('D', D), ('G_ema', G_ema), ('augment_pipe', augment_pipe)]:
                 if module is not None:
                     if args.num_gpus > 1:
                         misc.check_ddp_consistency(module, ignore_regex=r'.*\.w_avg')
                     module = copy.deepcopy(module).eval().requires_grad_(False).cpu()
+                    
+                    if isinstance(module, Generator):
+                        weight_histograms_generator(stats_tfevents, int(cur_nimg / 1e3), module, name, time.time()-start_time)
+                    if isinstance(module, Discriminator):
+                        weight_histograms_discriminator(stats_tfevents, int(cur_nimg / 1e3), module, name, time.time()-start_time)
+                        
                 snapshot_data[name] = module
                 del module # conserve memory
             snapshot_pkl = os.path.join(args.run_dir, f'network-snapshot-{cur_nimg//1000:06d}.pkl')
             if rank == 0:
                 with open(snapshot_pkl, 'wb') as f:
                     pickle.dump(snapshot_data, f)
+                
 
         # Evaluate metrics.
         if (snapshot_data is not None) and (len(args.metrics) > 0):
@@ -378,6 +401,7 @@ def training_loop(rank, args):
                 stats_tfevents.add_scalar(name, value.mean, global_step=global_step, walltime=walltime)
             for name, value in stats_metrics.items():
                 stats_tfevents.add_scalar(f'Metrics/{name}', value, global_step=global_step, walltime=walltime)
+            stats_tfevents.add_scalars('Loss', {'real': stats_dict['Loss/scores/real'].mean, 'fake': stats_dict['Loss/scores/fake'].mean}, global_step=global_step, walltime=walltime) # Plot DI in tensorboard           
             stats_tfevents.flush()
         if args.progress_fn is not None:
             args.progress_fn(cur_nimg // 1000, args.total_kimg)
