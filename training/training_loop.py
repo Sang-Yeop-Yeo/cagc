@@ -162,7 +162,7 @@ def training_loop(rank, args):
 
     net_list = [("G_mapping", G.mapping), ("G_synthesis", G.synthesis), ("D", D), (None, G_ema), ("augment_pipe", augment_pipe)]
     if args.kd_method is not None:
-        net_teacher_list = [("G_teacher_mapping", G_teacher.mapping), ("G_teacher_synthesis", G_teacher.synthesis), ("D_teacher", D_teacher), (None, G_teacher_ema), ("augment_pipe", augment_pipe)]
+        net_list += [("G_teacher_mapping", G_teacher.mapping), ("G_teacher_synthesis", G_teacher.synthesis), ("D_teacher", D_teacher), (None, G_teacher_ema), ("augment_pipe", augment_pipe)]
 
     ddp_modules = dict()
     for name, module in (net_list):
